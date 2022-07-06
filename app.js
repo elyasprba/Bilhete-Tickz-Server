@@ -30,6 +30,8 @@ const init = async () => {
     //  body payload
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
+    //cloudinary
+    app.use("*", cloudinaryConfig);
     //   cors
     const corsOptions = {
       origin: ["http://localhost:3000"],

@@ -1,6 +1,7 @@
-const { db } = require("../config/database");
+const db  = require("../config/db");
 const bcrypt = require("bcrypt");
 const { ErrorHandler } = require("../middlewares/errorHandler");
+const { password } = require("pg/lib/defaults");
 
 const getUserbyId = (id) => {
   return new Promise((resolve, reject) => {
@@ -21,26 +22,45 @@ const getUserbyId = (id) => {
   });
 };
 
-const updateUser = (id, body, file) => {
-  return new Promise((resolve, reject) => {
-    const { username, email, gender, description, address, phone_number, store_name } = body;
-    const updated_at = new Date(Date.now());
-    const photo = file ? file.path : null;
-    const sqlQuery =
-      "UPDATE users SET username= COALESCE($1, username), email= COALESCE($2, email), gender= COALESCE($3, gender), description= COALESCE($4, description), address= COALESCE($5, address), phone_number= COALESCE($6, phone_number), store_name= COALESCE($7, store_name), updated_at = $9, photo= COALESCE(NULLIF($10, ''), photo) WHERE id=$8 RETURNING *";
-    db.query(sqlQuery, [username, email, gender, description, address, phone_number, store_name, id, updated_at, photo])
-      .then((data) => {
-        const response = {
-          data: data.rows,
-          msg: "Your data has been updated!",
-        };
-        resolve(response);
-      })
-      .catch((err) => {
-        reject({ status: 500, err });
-      });
-  });
-};
+// const updateUser = (id, body, file) => {
+//   return new Promise((resolve, reject) => {
+//     const { email, password, firstname, lastname, point, phone_number, } = body;
+//     const hashedPassword = bcrypt.hash(password, 10);
+//     console.log(hashedPassword)
+//     const updated_at = new Date(Date.now());
+//     const pictures = file ? file.path : null;
+//     const sqlQuery =
+//       "UPDATE users SET email= COALESCE($1, email), password= COALESCE($2, password), firstname= COALESCE($3, firstname), lastname= COALESCE($4, lastname), point= COALESCE($5, point), pictures= COALESCE(NULLIF($6, ''), pictures), phone_number= COALESCE($7, phone_number),  updated_at = $8 WHERE id=$9 RETURNING *";
+//     db.query(sqlQuery, [email, firstname, lastname, point, pictures, phone_number, hashedPassword, updated_at, id])
+//       .then((data) => {
+//         const response = {
+//           data: data.rows,
+//           msg: "Your data has been updated!",
+//         };
+//         resolve(response);
+//       })
+//       .catch((err) => {
+//         reject({ status: 500, err });
+//       });
+//   });
+// };
+
+const updateUser = async (id, body, file) => {
+    try {
+      const { email, password, firstname, lastname, point, phone_number, } = body;
+      const updated_at = await new Date(Date.now());
+      const pictures = await file ? file.path : null;
+      const hashedNewPassword = await bcrypt.hash(password, 10);
+      const resetPass = await db.query("UPDATE users SET email= COALESCE($1, email), password= COALESCE($2, password), firstname= COALESCE($3, firstname), lastname= COALESCE($4, lastname), point= COALESCE($5, point), pictures= COALESCE(NULLIF($6, ''), pictures), phone_number= COALESCE($7, phone_number),  updated_at = $8 WHERE id=$9 RETURNING *", [email, hashedNewPassword, firstname, lastname, point, pictures, phone_number, updated_at, id]);
+      if (!resetPass.rowCount) throw new ErrorHandler({ status: 404, message: "Id Not Found" });
+      return {
+        message: "Edit success",
+      };
+    } catch (error) {
+      const { status, message } = error;
+      throw new ErrorHandler({ status: status ? status : 500, message });
+    }
+  };
 
 module.exports = {
   getUserbyId,
