@@ -9,6 +9,7 @@ const app = express();
 const mainRouter = require("./src/routes/index");
 const db = require("./src/config/db");
 // const redis = require("./src/config/redis");
+const cloudinaryConfig = require("./src/middlewares/cloudinary");
 
 // middleware
 const logger = require("morgan");
@@ -31,6 +32,8 @@ const init = async () => {
     //  body payload
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
+    //cloudinary
+    app.use("*", cloudinaryConfig);
     //   cors
     const corsOptions = {
       origin: ["http://localhost:3000"],
