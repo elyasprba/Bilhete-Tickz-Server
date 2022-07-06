@@ -4,6 +4,7 @@ const Router = express.Router();
 
 // router list
 const testing = require("./ping");
+const authRouter = require("./auth");
 // endpoint list
 Router.use("/ping", testing);
 
@@ -13,5 +14,6 @@ Router.get("*", function (req, res) {
     msg: "API not found",
   });
 });
+Router.use("/auth", authRouter);
 
 module.exports = Router;
