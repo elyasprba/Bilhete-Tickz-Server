@@ -8,14 +8,18 @@ const app = express();
 // connect
 const mainRouter = require("./src/routes/index");
 const db = require("./src/config/db");
+// const redis = require("./src/config/redis");
 
 // middleware
 const logger = require("morgan");
+
+// redis
 
 const init = async () => {
   try {
     // connect
     await db.connect();
+    // await redis.redisConn();
     // info connect
     console.log("Database Conected");
     //  middlware
