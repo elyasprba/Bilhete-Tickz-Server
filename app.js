@@ -9,6 +9,8 @@ const app = express();
 const mainRouter = require("./src/routes/index");
 const db = require("./src/config/db");
 // const redis = require("./src/config/redis");
+
+// config cloudinary
 const cloudinaryConfig = require("./src/middlewares/cloudinary");
 
 // middleware
