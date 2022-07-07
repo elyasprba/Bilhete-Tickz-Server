@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const sendConfirmationEmail = async (name, email, confirmationCode) => {
+const sendConfirmationEmail = async (name, email, token ,confirmationCode) => {
   try {
     const transport = nodemailer.createTransport({
       service: "gmail",
@@ -17,8 +17,9 @@ const sendConfirmationEmail = async (name, email, confirmationCode) => {
       from: process.env.MAIL_USERNAME,
       to: email,
       subject: "Please confirm your Account",
-      html: `<h2>Zilgya Furniture Email Confirmation</h2>
+      html: `<h2>Bilhete Tickz Email Confirmation</h2>
       <h3>Hi, ${name}</h3>
+      <h3>${token}</h3>
       <h3>Thank you for register. Please confirm your email by clicking on the following link :</h3>
       <a href=${process.env.CLIENT_URL}/auth/confirm/${confirmationCode}> Click here to verify </a>
       </div>`,
