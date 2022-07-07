@@ -12,17 +12,17 @@ const db = require("./src/config/db");
 
 // config cloudinary
 const cloudinaryConfig = require("./src/middlewares/cloudinary");
+const redis = require("./src/config/redis");
 
 // middleware
 const logger = require("morgan");
 
 // redis
-
 const init = async () => {
   try {
     // connect
     await db.connect();
-    // await redis.redisConn();
+    await redis.redisConn();
     // info connect
     console.log("Database Conected");
     //  middlware
