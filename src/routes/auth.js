@@ -10,7 +10,7 @@ Router.post("/", loginInput, authControllers.signIn);
 // confirm email
 Router.get("/confirm/:token", emailToken, authControllers.confirmEmail);
 // forgot-password
-// Router.get("/forgot-password/:email", authControllers.forgotPassword);
+Router.get("/forgot-password/:email", authControllers.forgotPassword);
 // sign out
 Router.delete("/", checkToken, authControllers.logout);
 

@@ -1,5 +1,5 @@
-// const { client } = require("../config/redis");
-const { getUserbyId, updateUser } = require("../models/users");
+const { client } = require("../config/redis");
+const { getUserbyId, updateUser, updateUserPassword } = require("../models/users");
 
 const getUserInfo = (req, res) => {
   getUserbyId(req.userPayload.id)
@@ -33,21 +33,45 @@ const getUserInfo = (req, res) => {
 // };
 
 const patchUserInfo = async (req, res) => {
-    try {
-      const { file = null } = req;
-      const { message } = await updateUser(req.userPayload.id, req.body, file);
-      res.status(200).json({
-        message,
-      });
-    } catch (error) {
-      const { message, status } = error;
-      res.status(status ? status : 500).json({
-        error: message,
-      });
+  try {
+    const { file = null } = req;
+    const { message } = await updateUser(req.userPayload.id, req.body, file);
+    res.status(200).json({
+      message,
+    });
+  } catch (error) {
+    const { message, status } = error;
+    res.status(status ? status : 500).json({
+      error: message,
+    });
+  }
+};
+
+const patchUserPassword = async (req, res) => {
+  try {
+    const { email, newPassword, confirmCode } = req.body;
+    const confirm = await client.get(`forgotpass${email}`);
+    if (confirm !== confirmCode) {
+      res.status(403).json({ error: "Invalid Confirmation Code !" });
+      return;
     }
-  };
+    const { message } = await updateUserPassword(newPassword, email);
+    if (message) {
+      await client.del(`forgotpass${email}`);
+    }
+    res.status(200).json({
+      message,
+    });
+  } catch (error) {
+    const { message, status } = error;
+    res.status(status ? status : 500).json({
+      error: message,
+    });
+  }
+};
 
 module.exports = {
   getUserInfo,
   patchUserInfo,
+  patchUserPassword
 };
