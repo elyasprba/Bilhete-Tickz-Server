@@ -8,7 +8,6 @@ const app = express();
 // connect
 const mainRouter = require("./src/routes/index");
 const db = require("./src/config/db");
-// const redis = require("./src/config/redis");
 
 // config cloudinary
 const cloudinaryConfig = require("./src/middlewares/cloudinary");
@@ -33,7 +32,7 @@ const init = async () => {
     }
     //  body payload
     app.use(express.json());
-    app.use(express.urlencoded({ extended: false }));
+    app.use(express.urlencoded({ extended: true }));
     //cloudinary
     app.use("*", cloudinaryConfig);
     //   cors
