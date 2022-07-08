@@ -47,14 +47,19 @@ const getUserbyId = (id) => {
 
 const updateUser = async (id, body, file) => {
   try {
-    const { email, password, firstname, lastname, point, phone_number, } = body;
+    const { password, firstname, lastname, point, phone_number, } = body;
     const updated_at = await new Date(Date.now());
     const pictures = await file ? file.path : null;
-    const hashedNewPassword = await bcrypt.hash(password, 10);
-    const resetPass = await db.query("UPDATE users SET email= COALESCE($1, email), password= COALESCE($2, password), firstname= COALESCE($3, firstname), lastname= COALESCE($4, lastname), point= COALESCE($5, point), pictures= COALESCE(NULLIF($6, ''), pictures), phone_number= COALESCE($7, phone_number),  updated_at = $8 WHERE id=$9 RETURNING *", [email, hashedNewPassword, firstname, lastname, point, pictures, phone_number, updated_at, id]);
+    let hashedNewPassword = null ;
+    if (password) {
+      hashedNewPassword = await bcrypt.hash(password, 10);
+    }
+    const resetPass = await db.query("UPDATE users SET password= COALESCE($1, password), firstname= COALESCE($2, firstname), lastname= COALESCE($3, lastname), point= COALESCE($4, point), pictures= COALESCE(NULLIF($5, ''), pictures), phone_number= COALESCE($6, phone_number),  updated_at = $7 WHERE id=$8 RETURNING *", [ hashedNewPassword, firstname, lastname, point, pictures, phone_number, updated_at, id]);
     if (!resetPass.rowCount) throw new ErrorHandler({ status: 404, message: "Id Not Found" });
+    console.log(hashedNewPassword)
+    console.log(password)
     return {
-      message: "Edit success",
+      message: "Update successful",
     };
   } catch (error) {
     const { status, message } = error;
