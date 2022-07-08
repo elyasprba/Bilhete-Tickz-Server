@@ -49,14 +49,19 @@ const getPassByUserEmail = async (email) => {
 
 const verifyEmail = async (email) => {
   try {
-    let sqlQuery = "UPDATE users SET status='active' WHERE email=$1 RETURNING *";
+    let sqlQuery =
+      "UPDATE users SET status='active' WHERE email=$1 RETURNING *";
     const result = await db.query(sqlQuery, [email]);
-    if (!result.rowCount) throw new ErrorHandler({ status: 404, message: "User Not Found" });
+    if (!result.rowCount)
+      throw new ErrorHandler({ status: 404, message: "User Not Found" });
     return {
       data: result.rows[0],
     };
   } catch (err) {
-    throw new ErrorHandler({ status: err.status ? err.status : 500, message: err.message });
+    throw new ErrorHandler({
+      status: err.status ? err.status : 500,
+      message: err.message,
+    });
   }
 };
 
