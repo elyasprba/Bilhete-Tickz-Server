@@ -144,22 +144,18 @@ const getMovies = async (query, upcoming = false) => {
 
       const value = query.month;
       const monthNow = arrMonth.indexOf(value) + 1;
-      console.log(monthNow);
       data.rows.map((item) => {
         const month = item.release_date.getMonth() + 1;
-        console.log(monthNow === month);
         if (monthNow === month) {
           dataFilter.push(item);
         }
       });
       countData = dataFilter.length;
       data = dataFilter.slice(offset, offset + limitValue);
-      console.log(offset, offset + limitValue);
     } else {
       const fixQuery = sqlQuery + dataQuery + querySort + paginationSql;
       data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
     }
-    console.log(data);
 
     // atur meta
     const totalData =
