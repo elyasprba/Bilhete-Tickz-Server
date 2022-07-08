@@ -61,11 +61,13 @@ const getMovies = async (query, upcoming = false) => {
     let textQuery = "";
     queryArray.map((item) => {
       countFilter += 1;
-      if (queryArray.length === countFilter) {
-        textQuery += `lower(${item}) LIKE lower('%' || $${countFilter} || '%') `;
+      if (queryArray.length === 1) {
+        textQuery += `${
+          upcoming === true ? " AND" : ""
+        } lower(${item}) LIKE lower('%' || $${countFilter} || '%') `;
         return;
       }
-      textQuery += `lower(${item}) LIKE lower('%' || $${countFilter} || '%') AND `;
+      textQuery += ` AND lower(${item}) LIKE lower('%' || $${countFilter} || '%') `;
     });
     //  handler sort
     if (bySort !== undefined) {
@@ -89,9 +91,9 @@ const getMovies = async (query, upcoming = false) => {
       date.getMonth() + 1
     }/${date.getFullYear()}`;
     const sqlQuery = "select id,name,category,img from movies ";
-    const sqlCek = `WHERE ${textQuery} ${
-      upcoming === true ? "AND release_date > '" + nowDate + "'" : ""
-    } `;
+    const sqlCek = `${
+      upcoming === true ? "WHERE release_date > '" + nowDate + "'" : "WHERE "
+    }${textQuery} `;
 
     // pagination
     const { page = 1, limit = 12 } = query;
@@ -102,10 +104,10 @@ const getMovies = async (query, upcoming = false) => {
     }`;
 
     //  total data dan total page
+    const dataQuery = queryArray.length > 0 ? sqlCek + querySort : "";
     const queryCountData =
-      "select id,name,category,img from movies " + sqlCek + querySort;
-    console.log(queryCountData);
-    const countData = await db.query(
+      "select id,name,category,img from movies " + dataQuery;
+    let countData = await db.query(
       queryCountData,
       queryKey.length !== 0 ? queryKey : ""
     );
@@ -113,7 +115,7 @@ const getMovies = async (query, upcoming = false) => {
     queryKey.push(limitValue);
     queryKey.push(offset);
 
-    const fixQuery = sqlQuery + sqlCek + querySort + paginationSql;
+    const fixQuery = sqlQuery + dataQuery + paginationSql;
     const data = await db.query(
       fixQuery,
       queryKey.length !== 0 ? queryKey : ""
