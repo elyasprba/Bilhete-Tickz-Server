@@ -11,7 +11,7 @@ const createNewPayments = async (body, id) => {
     let orderId;
     let params = [];
     let queryParams = [];
-    let status = '';
+    let status = false;
     let orderItemQuery = []
 
     const created_at = new Date(Date.now());
@@ -28,9 +28,11 @@ const createNewPayments = async (body, id) => {
     const order = await db.query(queryOrder, queryOrderParams);
     orderId = order.rows[0].id;
 
-    if(status === 'paid') {
-      orderItemQuery = "INSERT INTO tickets(id, showtimes_id, seat, price) VALUES";
+    if(status === true) {
+      orderItemQuery = "INSERT INTO tickets (id, showtimes_id, seat, price) VALUES ($1, $2, $3, $4)";
     }
+
+    // let orderItemQuery = "INSERT INTO tickets(id, showtimes_id, seat, price) VALUES";
 
     // product.map((val) => {
     //   queryParams.push(`($${params.length + 1},$${params.length + 2},$${params.length + 3})`, ",");
