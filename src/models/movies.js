@@ -52,8 +52,7 @@ const getMovies = async (query, upcoming = false) => {
       queryKey.push(query.name);
     }
     if (byMonth !== undefined) {
-      queryList.push({ query: "name", value: query.name });
-      queryKey.push(query.name);
+      queryList.push({ query: "month", value: query.month });
     }
 
     //  loop pengecekan filter yang ada
@@ -70,15 +69,15 @@ const getMovies = async (query, upcoming = false) => {
       textQuery += ` AND lower(${item}) LIKE lower('%' || $${countFilter} || '%') `;
     });
     //  handler sort
-    if (bySort !== undefined) {
-      if (query.sort === "name") {
+    if (byOrder !== undefined) {
+      if (query.order === "name") {
         querySort = "ORDER BY name ";
-        querySort += byOrder === undefined ? "asc" : query.order;
+        querySort += bySort === undefined ? "asc" : query.sort;
       }
 
-      if (query.sort === "release") {
+      if (query.order === "release") {
         querySort = "ORDER BY release_date ";
-        querySort += byOrder === undefined ? "asc" : query.order;
+        querySort += bySort === undefined ? "asc" : query.sort;
       }
 
       queryList.push({ query: "sort", value: query.sort });
@@ -87,10 +86,10 @@ const getMovies = async (query, upcoming = false) => {
       }
     }
     const date = new Date();
-    const nowDate = `${date.getDate()}/${
-      date.getMonth() + 1
+    const nowDate = `${date.getMonth()}/${
+      date.getDate() + 1
     }/${date.getFullYear()}`;
-    const sqlQuery = "select id,name,category,img from movies ";
+    const sqlQuery = "select id,name,category,img,release_date from movies ";
     const sqlCek = `${
       upcoming === true ? "WHERE release_date > '" + nowDate + "'" : "WHERE "
     }${textQuery} `;
@@ -104,29 +103,73 @@ const getMovies = async (query, upcoming = false) => {
     }`;
 
     //  total data dan total page
-    const dataQuery = queryArray.length > 0 ? sqlCek + querySort : "";
+    const dataQuery = queryArray.length > 0 || upcoming === true ? sqlCek : "";
     const queryCountData =
-      "select id,name,category,img from movies " + dataQuery;
-    let countData = await db.query(
+      "select id,name,category,img,release_date from movies " +
+      dataQuery +
+      querySort;
+    let countData;
+    countData = await db.query(
       queryCountData,
       queryKey.length !== 0 ? queryKey : ""
     );
 
-    queryKey.push(limitValue);
-    queryKey.push(offset);
+    if (byMonth === undefined) {
+      queryKey.push(limitValue);
+      queryKey.push(offset);
+    }
 
-    const fixQuery = sqlQuery + dataQuery + paginationSql;
-    const data = await db.query(
-      fixQuery,
-      queryKey.length !== 0 ? queryKey : ""
-    );
+    let data;
+    if (byMonth !== undefined && upcoming === true) {
+      const fixQuery = sqlQuery + dataQuery + querySort;
+      data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
+      let dataFilter = [];
+      // data count
+      // data rows
+      // month index
+      const arrMonth = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+      ];
+
+      const value = query.month;
+      const monthNow = arrMonth.indexOf(value) + 1;
+      console.log(monthNow);
+      data.rows.map((item) => {
+        const month = item.release_date.getMonth() + 1;
+        console.log(monthNow === month);
+        if (monthNow === month) {
+          dataFilter.push(item);
+        }
+      });
+      countData = dataFilter.length;
+      data = dataFilter.slice(offset, offset + limitValue);
+      console.log(offset, offset + limitValue);
+    } else {
+      const fixQuery = sqlQuery + dataQuery + querySort + paginationSql;
+      data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
+    }
+    console.log(data);
 
     // atur meta
-    const totalData = countData.rowCount;
+    const totalData =
+      byMonth !== undefined && upcoming === true
+        ? countData
+        : countData.rowCount;
     const totalPage = Math.ceil(totalData / parseInt(limitValue));
 
     return {
-      data: data.rows,
+      data: byMonth !== undefined && upcoming === true ? data : data.rows,
       totalData: totalData,
       totalPage: totalPage,
       query: queryList,

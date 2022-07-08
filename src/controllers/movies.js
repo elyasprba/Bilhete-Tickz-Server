@@ -73,11 +73,11 @@ const readMovies = async (req, res) => {
     let next =
       nextPage > result.totalPage
         ? {}
-        : { next: `/product?${queryPath}page=${nextPage}` };
+        : { next: `/movies?${queryPath}page=${nextPage}` };
     let prev =
       req.query.page <= 1
         ? {}
-        : { prev: `/product?${queryPath}page=${prevPage}` };
+        : { prev: `/movies?${queryPath}page=${prevPage}` };
 
     //   meta
     const meta = {
@@ -130,11 +130,11 @@ const readMoviesUpcoming = async (req, res) => {
     let next =
       nextPage > result.totalPage
         ? {}
-        : { next: `/product?${queryPath}page=${nextPage}` };
+        : { next: `/movies/upcoming?${queryPath}page=${nextPage}` };
     let prev =
       req.query.page <= 1
         ? {}
-        : { prev: `/product?${queryPath}page=${prevPage}` };
+        : { prev: `/movies/upcoming?${queryPath}page=${prevPage}` };
 
     //   meta
     const meta = {
