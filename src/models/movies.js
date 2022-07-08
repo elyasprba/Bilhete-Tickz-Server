@@ -33,14 +33,102 @@ const postMovies = async (body, img) => {
   }
 };
 
-const getMovies = async () => {
+const getMovies = async (query, upcoming = false) => {
   try {
-    const querySql = "select id,name,category,img from movies";
-    const result = await db.query(querySql);
-    if (!result.rows.length) {
-      throw new InvariantError("failed to get movies");
+    const byMonth = Object.keys(query).find((item) => item === "month");
+    const byName = Object.keys(query).find((item) => item === "name");
+    const bySort = Object.keys(query).find((item) => item === "sort");
+    const byOrder = Object.keys(query).find((item) => item === "order");
+
+    //  array query
+    let queryArray = [];
+    let querySort = "";
+    let queryKey = [];
+    let queryList = [];
+    //  handler filter
+    if (byName !== undefined) {
+      queryArray.push("name");
+      queryList.push({ query: "name", value: query.name });
+      queryKey.push(query.name);
     }
-    return result.rows;
+    if (byMonth !== undefined) {
+      queryList.push({ query: "name", value: query.name });
+      queryKey.push(query.name);
+    }
+
+    //  loop pengecekan filter yang ada
+    let countFilter = 0;
+    let textQuery = "";
+    queryArray.map((item) => {
+      countFilter += 1;
+      if (queryArray.length === countFilter) {
+        textQuery += `lower(${item}) LIKE lower('%' || $${countFilter} || '%') `;
+        return;
+      }
+      textQuery += `lower(${item}) LIKE lower('%' || $${countFilter} || '%') AND `;
+    });
+    //  handler sort
+    if (bySort !== undefined) {
+      if (query.sort === "name") {
+        querySort = "ORDER BY name ";
+        querySort += byOrder === undefined ? "asc" : query.order;
+      }
+
+      if (query.sort === "release") {
+        querySort = "ORDER BY release_date ";
+        querySort += byOrder === undefined ? "asc" : query.order;
+      }
+
+      queryList.push({ query: "sort", value: query.sort });
+      if (query.order !== undefined) {
+        queryList.push({ query: "order", value: query.order });
+      }
+    }
+    const date = new Date();
+    const nowDate = `${date.getDate()}/${
+      date.getMonth() + 1
+    }/${date.getFullYear()}`;
+    const sqlQuery = "select id,name,category,img from movies ";
+    const sqlCek = `WHERE ${textQuery} ${
+      upcoming === true ? "AND release_date > '" + nowDate + "'" : ""
+    } `;
+
+    // pagination
+    const { page = 1, limit = 12 } = query;
+    let limitValue = limit;
+    const offset = parseInt(page - 1) * parseInt(limit);
+    const paginationSql = ` LIMIT $${queryKey.length + 1} OFFSET $${
+      queryKey.length + 2
+    }`;
+
+    //  total data dan total page
+    const queryCountData =
+      "select id,name,category,img from movies " + sqlCek + querySort;
+    console.log(queryCountData);
+    const countData = await db.query(
+      queryCountData,
+      queryKey.length !== 0 ? queryKey : ""
+    );
+
+    queryKey.push(limitValue);
+    queryKey.push(offset);
+
+    const fixQuery = sqlQuery + sqlCek + querySort + paginationSql;
+    const data = await db.query(
+      fixQuery,
+      queryKey.length !== 0 ? queryKey : ""
+    );
+
+    // atur meta
+    const totalData = countData.rowCount;
+    const totalPage = Math.ceil(totalData / parseInt(limitValue));
+
+    return {
+      data: data.rows,
+      totalData: totalData,
+      totalPage: totalPage,
+      query: queryList,
+    };
   } catch (error) {
     throw error;
   }
