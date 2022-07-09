@@ -69,15 +69,15 @@ const getMovies = async (query, upcoming = false) => {
       textQuery += ` AND lower(${item}) LIKE lower('%' || $${countFilter} || '%') `;
     });
     //  handler sort
-    if (byOrder !== undefined) {
-      if (query.order === "name") {
+    if (bySort !== undefined) {
+      if (query.sort === "name") {
         querySort = "ORDER BY name ";
-        querySort += bySort === undefined ? "asc" : query.sort;
+        querySort += byOrder === undefined ? "asc" : query.order;
       }
 
-      if (query.order === "release") {
+      if (query.sort === "release") {
         querySort = "ORDER BY release_date ";
-        querySort += bySort === undefined ? "asc" : query.sort;
+        querySort += byOrder === undefined ? "asc" : query.order;
       }
 
       queryList.push({ query: "sort", value: query.sort });
