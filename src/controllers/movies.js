@@ -266,9 +266,29 @@ const readMoviesDetail = async (req, res) => {
   }
 };
 
+const readCinemas = async (req, res) => {
+  try {
+    const location = req.params.location;
+    const result = await getCinemas(location);
+    isSuccessHaveData(res, 200, result, "read data has been success");
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return response.isError(res, error.statusCode, error.message);
+    }
+    //   error server
+    console.log(error);
+    return response.isError(
+      res,
+      500,
+      "Sorry, there was a failure on our server"
+    );
+  }
+};
+
 module.exports = {
   createMovies,
   readMovies,
+  readCinemas,
   readMoviesUpcoming,
   readMoviesDetail,
   readMoviesNowshow,
