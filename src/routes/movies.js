@@ -9,6 +9,9 @@ const {
 const { checkToken } = require("../middlewares/auth");
 // multer
 const imageUpload = require("../middlewares/upload");
+// validasi input
+const { moviesInput } = require("../middlewares/movies");
+
 
 // endpoint
 
