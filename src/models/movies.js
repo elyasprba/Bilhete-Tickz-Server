@@ -3,14 +3,24 @@ const { v4: uuidV4 } = require("uuid");
 const InvariantError = require("../exceptions/InvariantError");
 const NotfoundError = require("../exceptions/NotfoundError");
 
+const getCinemas = async (location) => {
+  try {
+    const sqlQuery = "SELECT * from cinemas WHERE location = $1";
+    const result = await db.query(sqlQuery, [location]);
+    return result.rows;
+  } catch (error) {
+    throw error;
+  }
+};
 const postMovies = async (body, img) => {
   try {
     const id = uuidV4();
     const created_at = new Date().toISOString();
     const updated_at = created_at;
-    const { name, category, release_date, duration, cast, synopsis } = body;
+    const { name, category, release_date, duration, cast, synopsis, director } =
+      body;
     const sqlQuery =
-      "insert into movies values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id";
+      "insert into movies values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id";
     const result = await db.query(sqlQuery, [
       id,
       name,
@@ -22,6 +32,7 @@ const postMovies = async (body, img) => {
       created_at,
       updated_at,
       img,
+      director,
     ]);
 
     if (!result.rows.length) {
@@ -187,13 +198,12 @@ const getMoviesById = async (id) => {
   }
 };
 
-const postShowtime = async (body, movies_id, time) => {
+const postShowtime = async (price, movies_id, time, cinemas_id) => {
   try {
     const id = uuidV4();
     const created_at = new Date().toISOString();
     const updated_at = created_at;
     const status = "show soon";
-    const { cinemas_id, price } = body;
     const sqlQuery =
       "insert into showtimes values($1,$2,$3,$4,$5,$6,$7,$8) returning id";
     const result = await db.query(sqlQuery, [
@@ -216,4 +226,10 @@ const postShowtime = async (body, movies_id, time) => {
   }
 };
 
-module.exports = { postMovies, postShowtime, getMovies, getMoviesById };
+module.exports = {
+  postMovies,
+  postShowtime,
+  getMovies,
+  getMoviesById,
+  getCinemas,
+};
