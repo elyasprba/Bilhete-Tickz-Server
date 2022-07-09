@@ -5,6 +5,7 @@ const {
   readMoviesUpcoming,
   readMoviesDetail,
   readMoviesNowshow,
+  readCinemas,
 } = require("../controllers/movies");
 // check token
 const { checkToken } = require("../middlewares/auth");
@@ -17,6 +18,7 @@ Router.post("/", checkToken, imageUpload.single("img"), createMovies);
 Router.get("/", readMovies);
 Router.get("/upcoming", readMoviesUpcoming);
 Router.get("/nowshow", readMoviesNowshow);
+Router.get("/cinemas/:location", readCinemas);
 Router.get("/:id", readMoviesDetail);
 
 module.exports = Router;
