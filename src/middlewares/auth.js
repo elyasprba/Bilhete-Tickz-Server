@@ -5,7 +5,7 @@ const { client } = require("../config/redis.js");
 
 const registerInput = (req, res, next) => {
   // cek apakah Undifined body sesuai dengan yang diinginkan
-  const { email, password, roles_id } = req.body;
+  const { email, password } = req.body;
   let emailFormat = /^\w+([.-]?\w+)@\w+([.-]?\w+)(.\w{2,3})+$/;
   if (!email) {
     return isError(res, 400, { msg: "Email cannot be empty!" });
@@ -48,6 +48,28 @@ const loginInput = (req, res, next) => {
   }
   if (!password) {
     return isError(res, 400, { msg: "Password cannot be empty!" });
+  }
+
+  next();
+};
+
+const forgotInput = (req, res, next) => {
+  const { email } = req.params;
+  let emailFormat = /^\w+([.-]?\w+)@\w+([.-]?\w+)(.\w{2,3})+$/;
+  if (!email) {
+    return isError(res, 400, {
+      msg: "Email cannot be empty!",
+    });
+  }
+  
+  for (const key in req.params) {
+    if (key === "email") {
+      if (!req.params[key].match(emailFormat)) {
+        return isError(res, 400, {
+          msg: "Please insert a valid email!",
+        });
+      }
+    }
   }
 
   next();
@@ -130,4 +152,4 @@ const emailToken = (req, _res, next) => {
   );
 };
 
-module.exports = { checkDuplicate, checkToken, loginInput, registerInput, emailToken };
+module.exports = { checkDuplicate, checkToken, loginInput, registerInput, emailToken, forgotInput };

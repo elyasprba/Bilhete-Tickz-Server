@@ -1,5 +1,5 @@
 const paymentsModel = require("../models/payments");
-const { createNewPayments } = paymentsModel;
+const { createNewPayments, confirmPayment } = paymentsModel;
 
 const postNewTransactions = async (req, res) => {
   try {
@@ -18,6 +18,21 @@ const postNewTransactions = async (req, res) => {
   }
 };
 
+const paymentConfirm = async (_req, res) => {
+  try {
+      const { data } = await confirmPayment(response.body);
+      res.status(200).status({
+        data,
+      });
+  } catch (error) {
+    const status = error.status || 500;
+    res.status(status).json({
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
     postNewTransactions,
+    paymentConfirm
   };
