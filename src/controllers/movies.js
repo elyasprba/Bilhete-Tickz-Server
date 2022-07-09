@@ -4,6 +4,7 @@ const {
   postShowtime,
   getMovies,
   getMoviesById,
+  getCinemas,
 } = require("../models/movies");
 const response = require("../helper/response");
 const ClientError = require("../exceptions/ClientError");
@@ -11,6 +12,7 @@ const {
   isSuccessHaveData,
   isSuccessHavePagination,
 } = require("../helper/response");
+const NotfoundError = require("../exceptions/NotfoundError");
 
 const createMovies = async (req, res) => {
   try {
@@ -18,17 +20,39 @@ const createMovies = async (req, res) => {
     if (file === null) {
       throw new InvariantError("img must be required");
     }
-    const id = await postMovies(req.body, file.path);
 
     const timeArray = JSON.parse(req.body.time);
+    const cinemas = await getCinemas(req.body.location);
 
-    const waitPost = new Promise((resolve, reject) => {
+    if (cinemas.length === 0) {
+      throw new NotfoundError("there are no cinemas in " + req.body.location);
+    }
+
+    const id = await postMovies(req.body, file.path);
+    const waitPosttime = (cinemas_id) => {
+      return new Promise((resolve, reject) => {
+        let count = 0;
+        timeArray.map(async (time) => {
+          try {
+            await postShowtime(req.body.price, id, time, cinemas_id);
+            count += 1;
+            if (timeArray.length === count) {
+              return resolve();
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    };
+
+    const waitPostcinemas = new Promise((resolve, reject) => {
       let count = 0;
-      timeArray.map(async (time) => {
+      cinemas.map(async (item) => {
         try {
-          await postShowtime(req.body, id, time);
+          await waitPosttime(item.id);
           count += 1;
-          if (timeArray.length === count) {
+          if (cinemas.length === count) {
             return resolve();
           }
         } catch (error) {
@@ -36,7 +60,7 @@ const createMovies = async (req, res) => {
         }
       });
     });
-    await waitPost;
+    await waitPostcinemas;
     response.isSuccessNoData(res, 201, "Create Data has been success");
   } catch (error) {
     if (error instanceof ClientError) {
