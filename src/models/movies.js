@@ -3,14 +3,24 @@ const { v4: uuidV4 } = require("uuid");
 const InvariantError = require("../exceptions/InvariantError");
 const NotfoundError = require("../exceptions/NotfoundError");
 
+const getCinemas = async (location) => {
+  try {
+    const sqlQuery = "SELECT * from cinemas WHERE location = $1";
+    const result = await db.query(sqlQuery, [location]);
+    return result.rows;
+  } catch (error) {
+    throw error;
+  }
+};
 const postMovies = async (body, img) => {
   try {
     const id = uuidV4();
     const created_at = new Date().toISOString();
     const updated_at = created_at;
-    const { name, category, release_date, duration, cast, synopsis } = body;
+    const { name, category, release_date, duration, cast, synopsis, director } =
+      body;
     const sqlQuery =
-      "insert into movies values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id";
+      "insert into movies values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id";
     const result = await db.query(sqlQuery, [
       id,
       name,
@@ -22,6 +32,7 @@ const postMovies = async (body, img) => {
       created_at,
       updated_at,
       img,
+      director,
     ]);
 
     if (!result.rows.length) {
@@ -46,14 +57,13 @@ const getMovies = async (query, upcoming = false) => {
     let queryKey = [];
     let queryList = [];
     //  handler filter
-    if (byName !== undefined) {
+    if (byName !== undefined && query.name !== "") {
       queryArray.push("name");
       queryList.push({ query: "name", value: query.name });
       queryKey.push(query.name);
     }
-    if (byMonth !== undefined) {
-      queryList.push({ query: "name", value: query.name });
-      queryKey.push(query.name);
+    if (byMonth !== undefined && query.month !== "") {
+      queryList.push({ query: "month", value: query.month });
     }
 
     //  loop pengecekan filter yang ada
@@ -87,10 +97,10 @@ const getMovies = async (query, upcoming = false) => {
       }
     }
     const date = new Date();
-    const nowDate = `${date.getDate()}/${
-      date.getMonth() + 1
+    const nowDate = `${date.getMonth()}/${
+      date.getDate() + 1
     }/${date.getFullYear()}`;
-    const sqlQuery = "select id,name,category,img from movies ";
+    const sqlQuery = "select id,name,category,img,release_date from movies ";
     const sqlCek = `${
       upcoming === true ? "WHERE release_date > '" + nowDate + "'" : "WHERE "
     }${textQuery} `;
@@ -104,29 +114,75 @@ const getMovies = async (query, upcoming = false) => {
     }`;
 
     //  total data dan total page
-    const dataQuery = queryArray.length > 0 ? sqlCek + querySort : "";
+    const dataQuery = queryArray.length > 0 || upcoming === true ? sqlCek : "";
     const queryCountData =
-      "select id,name,category,img from movies " + dataQuery;
-    let countData = await db.query(
+      "select id,name,category,img,release_date from movies " +
+      dataQuery +
+      querySort;
+    let countData;
+    countData = await db.query(
       queryCountData,
       queryKey.length !== 0 ? queryKey : ""
     );
 
-    queryKey.push(limitValue);
-    queryKey.push(offset);
+    if (byMonth === undefined || query.month === "") {
+      queryKey.push(limitValue);
+      queryKey.push(offset);
+    }
 
-    const fixQuery = sqlQuery + dataQuery + paginationSql;
-    const data = await db.query(
-      fixQuery,
-      queryKey.length !== 0 ? queryKey : ""
-    );
+    let data;
+    if (byMonth !== undefined && upcoming === true && query.month !== "") {
+      const fixQuery = sqlQuery + dataQuery + querySort;
+      data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
+      let dataFilter = [];
+      // data count
+      // data rows
+      // month index
+      const arrMonth = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+      ];
+
+      const value = query.month;
+      const monthNow = arrMonth.indexOf(value) + 1;
+      data.rows.map((item) => {
+        const month = item.release_date.getMonth() + 1;
+        if (monthNow === month) {
+          dataFilter.push(item);
+        }
+      });
+      countData = dataFilter.length;
+      data = dataFilter.slice(offset, offset + limitValue);
+    } else {
+      const fixQuery = sqlQuery + dataQuery + querySort + paginationSql;
+
+      console.log(fixQuery);
+      console.log(queryKey);
+      data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
+    }
 
     // atur meta
-    const totalData = countData.rowCount;
+    const totalData =
+      byMonth !== undefined && upcoming === true && query.month !== ""
+        ? countData
+        : countData.rowCount;
     const totalPage = Math.ceil(totalData / parseInt(limitValue));
 
     return {
-      data: data.rows,
+      data:
+        byMonth !== undefined && upcoming === true && query.month !== ""
+          ? data
+          : data.rows,
       totalData: totalData,
       totalPage: totalPage,
       query: queryList,
@@ -148,15 +204,14 @@ const getMoviesById = async (id) => {
   }
 };
 
-const postShowtime = async (body, movies_id, time) => {
+const postShowtime = async (price, movies_id, time, cinemas_id, show_date) => {
   try {
     const id = uuidV4();
     const created_at = new Date().toISOString();
     const updated_at = created_at;
     const status = "show soon";
-    const { cinemas_id, price } = body;
     const sqlQuery =
-      "insert into showtimes values($1,$2,$3,$4,$5,$6,$7,$8) returning id";
+      "insert into showtimes values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id";
     const result = await db.query(sqlQuery, [
       id,
       movies_id,
@@ -166,6 +221,7 @@ const postShowtime = async (body, movies_id, time) => {
       price,
       created_at,
       updated_at,
+      show_date,
     ]);
 
     if (!result.rows.length) {
@@ -177,4 +233,10 @@ const postShowtime = async (body, movies_id, time) => {
   }
 };
 
-module.exports = { postMovies, postShowtime, getMovies, getMoviesById };
+module.exports = {
+  postMovies,
+  postShowtime,
+  getMovies,
+  getMoviesById,
+  getCinemas,
+};
