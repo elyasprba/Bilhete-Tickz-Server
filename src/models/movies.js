@@ -204,14 +204,14 @@ const getMoviesById = async (id) => {
   }
 };
 
-const postShowtime = async (price, movies_id, time, cinemas_id) => {
+const postShowtime = async (price, movies_id, time, cinemas_id, show_date) => {
   try {
     const id = uuidV4();
     const created_at = new Date().toISOString();
     const updated_at = created_at;
     const status = "show soon";
     const sqlQuery =
-      "insert into showtimes values($1,$2,$3,$4,$5,$6,$7,$8) returning id";
+      "insert into showtimes values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id";
     const result = await db.query(sqlQuery, [
       id,
       movies_id,
@@ -221,6 +221,7 @@ const postShowtime = async (price, movies_id, time, cinemas_id) => {
       price,
       created_at,
       updated_at,
+      show_date,
     ]);
 
     if (!result.rows.length) {

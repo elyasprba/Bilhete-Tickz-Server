@@ -34,7 +34,13 @@ const createMovies = async (req, res) => {
         let count = 0;
         timeArray.map(async (time) => {
           try {
-            await postShowtime(req.body.price, id, time, cinemas_id);
+            await postShowtime(
+              req.body.price,
+              id,
+              time,
+              cinemas_id,
+              req.body.show_date
+            );
             count += 1;
             if (timeArray.length === count) {
               return resolve();

@@ -5,7 +5,7 @@ const NotfoundError = require("../exceptions/NotfoundError");
 const getCinemas = async (id) => {
   try {
     const result = await db.query(
-      "select c.*,SUM(s.price) as price from cinemas c inner join showtimes s on c.id = s.cinemas_id where s.movies_id = $1 group by c.id  ",
+      "select c.*,s.price ,s.show_date  from cinemas c inner join showtimes s on c.id = s.cinemas_id where s.movies_id = $1 group by c.id ,s.show_date,s.price  ",
       [id]
     );
     return result.rows;

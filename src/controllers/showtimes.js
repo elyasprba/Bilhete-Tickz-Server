@@ -13,7 +13,6 @@ const readShowtimes = async (req, res) => {
       cinemas.map(async (item) => {
         try {
           const result = await getShowtimes(item.id, movies_id);
-          item.price = parseInt(item.price) / result.length;
           item.list_time = result;
           data.push(item);
           count += 1;
