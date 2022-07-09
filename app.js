@@ -37,7 +37,7 @@ const init = async () => {
     app.use("*", cloudinaryConfig);
     //   cors
     const corsOptions = {
-      origin: ["http://localhost:3000"],
+      origin: ["http://localhost:3000", "https://bilhete-tickz.vercel.app/"],
       methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS", "PUT"],
       allowedHeaders: ["Content-Type", "Authorization"],
     };

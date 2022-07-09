@@ -11,7 +11,7 @@ const getCinemas = async (location) => {
   } catch (error) {
     throw error;
   }
-};
+}
 const postMovies = async (body, img) => {
   try {
     const id = uuidV4();

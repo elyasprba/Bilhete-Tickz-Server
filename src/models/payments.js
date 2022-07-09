@@ -2,6 +2,7 @@ const db = require("../config/db");
 //const { param } = require("../routes/transactions");
 const { ErrorHandler } = require("../helper/errorHandler");
 const { v4: uuidV4 } = require("uuid");
+const { snap } = require("../config/midtrans");
 
 const createNewPayments = async (body, id) => {
   const { showtimes_id, seat, price, users_id, quantity, total } = body;
@@ -52,6 +53,47 @@ const createNewPayments = async (body, id) => {
   }
 };
 
+const confirmPayment = async (response) => {
+  try {
+    const { body } = response;
+    const statusResponse = await snap.transaction.notification(body);
+    let orderId = statusResponse.order_id;
+    let transactionStatus = statusResponse.transaction_status;
+    let fraudStatus = statusResponse.fraud_status;
+
+    // Sample paymentStatus handling logic
+
+    if (transactionStatus == "capture") {
+      // capture only applies to card transaction, which you need to check for the fraudStatus
+      if (fraudStatus == "challenge") {
+        // DO set transaction status on your databaase to 'challenge'
+      } else if (fraudStatus == "accept") {
+        const result = await db.query("UPDATE payments set status = true WHERE id = $1 RETURNING *", [orderId]);
+        return {
+          data: result.rows[0],
+        };
+      }
+    } else if (transactionStatus == "settlement") {
+      const result = await db.query("INSERT INTO tickets (id, showtimes_id, seat, price) VALUES ($1, $2, $3, $4)", [orderId]);
+      return {
+        data: result.rows[0],
+      };
+    } else if (transactionStatus == "deny") {
+      // DO you can ignore 'deny', because most of the time it allows payment retries
+      // and later can become success
+    } else if (transactionStatus == "cancel" || transactionStatus == "expire") {
+      // DO set transaction status on your databaase to 'failure'
+    } else if (transactionStatus == "pending") {
+      // DO set transaction status on your databaase to 'pending' / waiting payment
+    }
+  } catch (error) {
+    console.log(error)
+    const status = error.status || 500;
+    throw new ErrorHandler({ status, message: error.message });
+  }
+};
+
 module.exports = {
     createNewPayments,
+    confirmPayment
   }
