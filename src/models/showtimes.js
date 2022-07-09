@@ -31,14 +31,22 @@ const getCinemas = async (query, id) => {
     let textQuery = "";
     queryArray.map((item) => {
       countFilter += 1;
-      textQuery += ` lower(${item}) LIKE lower('%' || $${countFilter} || '%') AND`;
+      if (item === "s.show_date") {
+        textQuery += ` ${item} = $${countFilter} AND`;
+      } else {
+        textQuery += ` lower(${item}) LIKE lower('%' || $${countFilter} || '%') AND`;
+      }
     });
-    queryArray.push(id);
+    queryKey.push(id);
 
     //  handler sort
     if (bySort !== undefined) {
       if (query.sort === "date") {
         querySort = "ORDER BY s.show_date ";
+        querySort += byOrder === undefined ? "asc" : query.order;
+      }
+      if (query.sort === "name") {
+        querySort = "ORDER BY c.name ";
         querySort += byOrder === undefined ? "asc" : query.order;
       }
 
@@ -49,12 +57,10 @@ const getCinemas = async (query, id) => {
     }
     const sqlQuery =
       "select c.*,s.price ,s.show_date  from cinemas c inner join showtimes s on c.id = s.cinemas_id ";
-    const sqlCek = `where ${textQuery} s.movies_id = $${
-      queryArray.length - 1
-    } group by c.id ,s.show_date,s.price `;
+    const sqlCek = `where ${textQuery} s.movies_id = $${queryKey.length} group by c.id ,s.show_date,s.price `;
 
     // pagination
-    const { page = 1, limit = 12 } = query;
+    const { page = 1, limit = 1 } = query;
     let limitValue = limit;
     const offset = parseInt(page - 1) * parseInt(limit);
     const paginationSql = ` LIMIT $${queryKey.length + 1} OFFSET $${
@@ -64,7 +70,7 @@ const getCinemas = async (query, id) => {
     //  total data dan total page
 
     const queryCountData =
-      "select id,name,category,img,release_date from movies " +
+      "select c.*,s.price ,s.show_date  from cinemas c inner join showtimes s on c.id = s.cinemas_id " +
       sqlCek +
       querySort;
     let countData;
@@ -72,12 +78,23 @@ const getCinemas = async (query, id) => {
       queryCountData,
       queryKey.length !== 0 ? queryKey : ""
     );
+    queryKey.push(limitValue);
+    queryKey.push(offset);
 
-    const result = await db.query(
-      "select c.*,s.price ,s.show_date  from cinemas c inner join showtimes s on c.id = s.cinemas_id group by c.id ,s.show_date,s.price  ",
-      [id]
-    );
-    return result.rows;
+    const fixQuery = sqlQuery + sqlCek + querySort + paginationSql;
+
+    data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
+
+    // atur meta
+    const totalData = countData.rowCount;
+    const totalPage = Math.ceil(totalData / parseInt(limitValue));
+
+    return {
+      data: data.rows,
+      totalData: totalData,
+      totalPage: totalPage,
+      query: queryList,
+    };
   } catch (error) {
     throw error;
   }

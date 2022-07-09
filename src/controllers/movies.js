@@ -22,11 +22,7 @@ const createMovies = async (req, res) => {
     }
 
     const timeArray = JSON.parse(req.body.time);
-    const cinemas = await getCinemas(req.body.location);
-
-    if (cinemas.length === 0) {
-      throw new NotfoundError("there are no cinemas in " + req.body.location);
-    }
+    const cinemas = JSON.parse(req.body.cinemas_id);
 
     const id = await postMovies(req.body, file.path);
     const waitPosttime = (cinemas_id) => {
