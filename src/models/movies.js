@@ -44,7 +44,7 @@ const postMovies = async (body, img) => {
   }
 };
 
-const getMovies = async (query, upcoming = false) => {
+const getMovies = async (query, upcoming = false, nowshow = false) => {
   try {
     const byMonth = Object.keys(query).find((item) => item === "month");
     const byName = Object.keys(query).find((item) => item === "name");
@@ -102,8 +102,10 @@ const getMovies = async (query, upcoming = false) => {
     }/${date.getFullYear()}`;
     const sqlQuery = "select id,name,category,img,release_date from movies ";
     const sqlCek = `${
-      upcoming === true ? "WHERE release_date > '" + nowDate + "'" : "WHERE "
-    }${textQuery} `;
+      upcoming === true ? "WHERE release_date > '" + nowDate + "'" : ""
+    } ${nowshow === true ? "WHERE release_date <= '" + nowDate + "'" : ""}
+    ${upcoming === false && nowshow === false ? "WHERE " : ""}
+    ${textQuery} `;
 
     // pagination
     const { page = 1, limit = 12 } = query;
@@ -114,7 +116,10 @@ const getMovies = async (query, upcoming = false) => {
     }`;
 
     //  total data dan total page
-    const dataQuery = queryArray.length > 0 || upcoming === true ? sqlCek : "";
+    const dataQuery =
+      queryArray.length > 0 || upcoming === true || nowshow === true
+        ? sqlCek
+        : "";
     const queryCountData =
       "select id,name,category,img,release_date from movies " +
       dataQuery +
@@ -166,8 +171,6 @@ const getMovies = async (query, upcoming = false) => {
     } else {
       const fixQuery = sqlQuery + dataQuery + querySort + paginationSql;
 
-      console.log(fixQuery);
-      console.log(queryKey);
       data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
     }
 
