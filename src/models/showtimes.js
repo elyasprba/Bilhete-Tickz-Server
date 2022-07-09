@@ -60,7 +60,7 @@ const getCinemas = async (query, id) => {
     const sqlCek = `where ${textQuery} s.movies_id = $${queryKey.length} group by c.id ,s.show_date,s.price `;
 
     // pagination
-    const { page = 1, limit = 1 } = query;
+    const { page = 1, limit = 12 } = query;
     let limitValue = limit;
     const offset = parseInt(page - 1) * parseInt(limit);
     const paginationSql = ` LIMIT $${queryKey.length + 1} OFFSET $${
