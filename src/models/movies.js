@@ -57,12 +57,12 @@ const getMovies = async (query, upcoming = false) => {
     let queryKey = [];
     let queryList = [];
     //  handler filter
-    if (byName !== undefined) {
+    if (byName !== undefined && query.name !== "") {
       queryArray.push("name");
       queryList.push({ query: "name", value: query.name });
       queryKey.push(query.name);
     }
-    if (byMonth !== undefined) {
+    if (byMonth !== undefined && query.month !== "") {
       queryList.push({ query: "month", value: query.month });
     }
 
@@ -125,13 +125,13 @@ const getMovies = async (query, upcoming = false) => {
       queryKey.length !== 0 ? queryKey : ""
     );
 
-    if (byMonth === undefined) {
+    if (byMonth === undefined || query.month === "") {
       queryKey.push(limitValue);
       queryKey.push(offset);
     }
 
     let data;
-    if (byMonth !== undefined && upcoming === true) {
+    if (byMonth !== undefined && upcoming === true && query.month !== "") {
       const fixQuery = sqlQuery + dataQuery + querySort;
       data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
       let dataFilter = [];
@@ -165,18 +165,24 @@ const getMovies = async (query, upcoming = false) => {
       data = dataFilter.slice(offset, offset + limitValue);
     } else {
       const fixQuery = sqlQuery + dataQuery + querySort + paginationSql;
+
+      console.log(fixQuery);
+      console.log(queryKey);
       data = await db.query(fixQuery, queryKey.length !== 0 ? queryKey : "");
     }
 
     // atur meta
     const totalData =
-      byMonth !== undefined && upcoming === true
+      byMonth !== undefined && upcoming === true && query.month !== ""
         ? countData
         : countData.rowCount;
     const totalPage = Math.ceil(totalData / parseInt(limitValue));
 
     return {
-      data: byMonth !== undefined && upcoming === true ? data : data.rows,
+      data:
+        byMonth !== undefined && upcoming === true && query.month !== ""
+          ? data
+          : data.rows,
       totalData: totalData,
       totalPage: totalPage,
       query: queryList,
