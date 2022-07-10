@@ -1,5 +1,8 @@
+const ClientError = require("../exceptions/ClientError");
+const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
-const { createNewPayments, confirmPayment } = paymentsModel;
+const { createNewPayments, confirmPayment, unpaidPayment, postTickets } =
+  paymentsModel;
 
 const postNewTransactions = async (req, res) => {
   try {
@@ -18,12 +21,58 @@ const postNewTransactions = async (req, res) => {
   }
 };
 
-const paymentConfirm = async (_req, res) => {
+const unpaid = async (req, res) => {
   try {
-      const { data } = await confirmPayment(response.body);
-      res.status(200).status({
-        data,
+    const { id } = req.userPayload;
+    const result = await unpaidPayment(id);
+    if (result !== undefined) {
+      return response.isSuccessHaveData(
+        res,
+        201,
+        result,
+        "there are unpaid transactions"
+      );
+    }
+    return response.isSuccessHaveData(res, 200, null, "no unpaid transactions");
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return response.isError(res, error.statusCode, error.message);
+    }
+    //   error server
+    console.log(error);
+    return response.isError(
+      res,
+      500,
+      "Sorry, there was a failure on our server"
+    );
+  }
+};
+
+const paymentConfirm = async (req, res) => {
+  try {
+    const id = req.params.id;
+    // const {order_id,groiss_amount} = req.body.transaction_details
+    // const response = await createPayment(req.body.payment_type,req.body.transaction_details)
+    const result = await confirmPayment(id);
+    // create ticket
+    let seat = result.seat.split(",");
+    const waitTickets = new Promise((resolve, reject) => {
+      let count = 0;
+      seat.map(async (item) => {
+        try {
+          await postTickets(result.showtimes_id, item);
+          count += 1;
+          if (count === seat.length) {
+            return resolve();
+          }
+        } catch (error) {
+          return reject(error);
+        }
       });
+    });
+
+    await waitTickets;
+    response.isSuccessNoData(res, 200, "Transaction Paid Successfully");
   } catch (error) {
     const status = error.status || 500;
     res.status(status).json({
@@ -33,6 +82,7 @@ const paymentConfirm = async (_req, res) => {
 };
 
 module.exports = {
-    postNewTransactions,
-    paymentConfirm
-  };
+  postNewTransactions,
+  paymentConfirm,
+  unpaid,
+};
