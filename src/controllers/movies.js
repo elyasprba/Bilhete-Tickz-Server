@@ -52,7 +52,7 @@ const createMovies = async (req, res) => {
       let count = 0;
       cinemas.map(async (item) => {
         try {
-          await waitPosttime(item.id);
+          await waitPosttime(item);
           count += 1;
           if (cinemas.length === count) {
             return resolve();
