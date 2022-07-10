@@ -14,10 +14,15 @@ const imageUpload = require("../middlewares/upload");
 // validasi input
 const { moviesInput } = require("../middlewares/movies");
 
-
 // endpoint
 
-Router.post("/", checkToken, imageUpload.single("img"), createMovies);
+Router.post(
+  "/",
+  checkToken,
+  moviesInput,
+  imageUpload.single("img"),
+  createMovies
+);
 Router.get("/", readMovies);
 Router.get("/upcoming", readMoviesUpcoming);
 Router.get("/nowshow", readMoviesNowshow);
