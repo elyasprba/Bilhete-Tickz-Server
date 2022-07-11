@@ -12,8 +12,8 @@ const createPayment = async (paymentType, transaction) => {
       bank_transfer,
     },
     transaction_details: {
-      order_id: transaction.orderId,
-      gross_amount: transaction.amount,
+      order_id: transaction.order_id,
+      gross_amount: transaction.gross_amount,
     },
   };
   try {
@@ -26,6 +26,5 @@ const createPayment = async (paymentType, transaction) => {
     console.log(error);
   }
 };
-
 
 module.exports = { createPayment, snap };
