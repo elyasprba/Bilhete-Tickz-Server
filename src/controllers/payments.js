@@ -4,6 +4,7 @@ const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
 const {
   createNewPayments,
+  cancelPayment,
   confirmPayment,
   unpaidPayment,
   postTickets,
@@ -58,7 +59,7 @@ const cancelPay = async (req, res) => {
   try {
     const { id } = req.userPayload;
     const result = await cancelPayment(id);
-    if (result.id !== undefined) {
+    if (result === undefined) {
       throw new NotfoundError("transaction not found");
     }
     return response.isSuccessNoData(res, 200, "Transaction has been cancel");
