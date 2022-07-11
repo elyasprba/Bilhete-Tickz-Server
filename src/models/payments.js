@@ -150,9 +150,50 @@ const postTickets = async (showtimes_id, seat) => {
   }
 };
 
+const getTransactionDetailTickets = (req) => {
+  return new Promise((resolve, reject) => {
+    const { id } = req.params
+    const sqlQuery =
+      "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join movies on showtimes.movies_id = movies.id where payments.id = $1 and payments.status = 'paid'";
+    db.query(sqlQuery, [id])
+      .then((result) => {
+        //console.log(result)
+        const response = {
+          total: result.rowCount,
+          data: result.rows,
+        };
+        resolve(response);
+      })
+      .catch((err) => {
+        reject({ status: 500, err });
+      });
+  });
+};
+
+const getHistoryTransactionUsers = (id) => {
+  return new Promise((resolve, reject) => {
+    const sqlQuery =
+      "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category, cinemas.name as name_cinemas from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join cinemas on showtimes.cinemas_id = cinemas.id join movies on showtimes.movies_id = movies.id where users.id = $1";
+    db.query(sqlQuery, [id])
+      .then((result) => {
+        //console.log(result)
+        const response = {
+          total: result.rowCount,
+          data: result.rows,
+        };
+        resolve(response);
+      })
+      .catch((err) => {
+        reject({ status: 500, err });
+      });
+  });
+};
+
 module.exports = {
   createNewPayments,
   confirmPayment,
   unpaidPayment,
   postTickets,
+  getTransactionDetailTickets,
+  getHistoryTransactionUsers,
 };

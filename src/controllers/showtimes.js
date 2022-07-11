@@ -1,5 +1,5 @@
 const InvariantError = require("../exceptions/InvariantError");
-const { getCinemas, getShowtimes } = require("../models/showtimes");
+const { getCinemas, getShowtimes, getShowtimeDetailFilm } = require("../models/showtimes");
 const response = require("../helper/response");
 const ClientError = require("../exceptions/ClientError");
 const NotfoundError = require("../exceptions/NotfoundError");
@@ -84,4 +84,18 @@ const readShowtimes = async (req, res) => {
   }
 };
 
-module.exports = { readShowtimes };
+const getShowtimesDetail = (req, res) => {
+  getShowtimeDetailFilm(req)
+    .then((data) => {
+      res.status(200).json({
+        data,
+      });
+    })
+    .catch(({ status, err }) => {
+      res.status(status).json({
+        err,
+      });
+    });
+};
+
+module.exports = { readShowtimes, getShowtimesDetail };

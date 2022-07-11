@@ -1,7 +1,7 @@
 const ClientError = require("../exceptions/ClientError");
 const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
-const { createNewPayments, confirmPayment, unpaidPayment, postTickets } =
+const { createNewPayments, confirmPayment, unpaidPayment, postTickets, getTransactionDetailTickets, getHistoryTransactionUsers } =
   paymentsModel;
 
 const postNewTransactions = async (req, res) => {
@@ -81,8 +81,39 @@ const paymentConfirm = async (req, res) => {
   }
 };
 
+const getTransactionTikects = (req, res) => {
+  getTransactionDetailTickets(req)
+    .then((data) => {
+      res.status(200).json({
+        data,
+      });
+    })
+    .catch(({ status, err }) => {
+      res.status(status).json({
+        err,
+      });
+    });
+};
+
+const getHistoryTransaction = (req, res) => {
+  const id = req.userPayload.id;
+  getHistoryTransactionUsers(id)
+    .then((data) => {
+      res.status(200).json({
+        data,
+      });
+    })
+    .catch(({ status, err }) => {
+      res.status(status).json({
+        err,
+      });
+    });
+};
+
 module.exports = {
   postNewTransactions,
   paymentConfirm,
   unpaid,
+  getTransactionTikects,
+  getHistoryTransaction
 };
