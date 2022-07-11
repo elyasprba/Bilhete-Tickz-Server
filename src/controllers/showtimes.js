@@ -13,7 +13,6 @@ const creatShowtimes = async (req, res) => {
   try {
     const timeArray = JSON.parse(req.body.time);
     const id = req.body.movie_id;
-    console.log(id);
     const cinemas = JSON.parse(req.body.cinemas_id);
     const waitPosttime = (cinemas_id) => {
       return new Promise((resolve, reject) => {
