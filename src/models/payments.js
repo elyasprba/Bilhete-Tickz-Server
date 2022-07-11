@@ -228,4 +228,5 @@ module.exports = {
   postTickets,
   getTransactionDetailTickets,
   getHistoryTransactionUsers,
+  cancelPayment,
 };
