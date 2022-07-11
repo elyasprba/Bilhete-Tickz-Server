@@ -91,6 +91,16 @@ const unpaidPayment = async (id) => {
     throw error;
   }
 };
+const cancelPayment = async (id) => {
+  try {
+    const sqlQuery =
+      "delete from payments where users_id = $1 and status = 'unpaid' returning id";
+    const result = await db.query(sqlQuery, [id]);
+    return result.rows[0];
+  } catch (error) {
+    throw error;
+  }
+};
 
 const confirmPayment = async (id) => {
   try {
