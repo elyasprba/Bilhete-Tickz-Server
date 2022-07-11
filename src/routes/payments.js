@@ -4,9 +4,10 @@ const Router = express.Router();
 
 const paymentsControllers = require("../controllers/payments");
 const { checkToken } = require("../middlewares/auth");
-const { confirmPayment } = require("../models/payments");
+// const { confirmPayment } = require("../models/payments");
 
 Router.post("/", checkToken, paymentsControllers.postNewTransactions);
-Router.post("/midtrans-notification", confirmPayment);
+Router.patch("/:id", checkToken, paymentsControllers.paymentConfirm);
+Router.get("/check", checkToken, paymentsControllers.unpaid);
 
 module.exports = Router;
