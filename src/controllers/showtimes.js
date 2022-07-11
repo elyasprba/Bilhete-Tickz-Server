@@ -4,9 +4,69 @@ const {
   getShowtimes,
   getShowtimeDetailFilm,
 } = require("../models/showtimes");
+const { postShowtime } = require("../models/movies");
 const response = require("../helper/response");
 const ClientError = require("../exceptions/ClientError");
 const NotfoundError = require("../exceptions/NotfoundError");
+
+const creatShowtimes = async (req, res) => {
+  try {
+    const timeArray = JSON.parse(req.body.time);
+    const id = req.body.movie_id;
+    console.log(id);
+    const cinemas = JSON.parse(req.body.cinemas_id);
+    const waitPosttime = (cinemas_id) => {
+      return new Promise((resolve, reject) => {
+        let count = 0;
+        timeArray.map(async (time) => {
+          try {
+            await postShowtime(
+              req.body.price,
+              id,
+              time,
+              cinemas_id,
+              req.body.show_date
+            );
+            count += 1;
+            if (timeArray.length === count) {
+              return resolve();
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    };
+
+    const waitPostcinemas = new Promise((resolve, reject) => {
+      let count = 0;
+      cinemas.map(async (item) => {
+        try {
+          await waitPosttime(item);
+          count += 1;
+          if (cinemas.length === count) {
+            return resolve();
+          }
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    await waitPostcinemas;
+    response.isSuccessNoData(res, 201, "Create Data has been success");
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return response.isError(res, error.statusCode, error.message);
+    }
+    //   error server
+    console.log(error);
+    return response.isError(
+      res,
+      500,
+      "Sorry, there was a failure on our server"
+    );
+  }
+};
 
 const readShowtimes = async (req, res) => {
   try {
@@ -109,4 +169,4 @@ const getShowtimesDetail = (req, res) => {
     });
 };
 
-module.exports = { readShowtimes, getShowtimesDetail };
+module.exports = { creatShowtimes, readShowtimes, getShowtimesDetail };
