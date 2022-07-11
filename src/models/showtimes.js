@@ -111,4 +111,24 @@ const getShowtimes = async (cinemas_id, movies_id) => {
   }
 };
 
-module.exports = { getCinemas, getShowtimes };
+const getShowtimeDetailFilm = (req) => {
+  return new Promise((resolve, reject) => {
+    const { id } = req.params
+    const sqlQuery =
+      "select movies.name, showtimes.time, cinemas.name as cinema_name, showtimes.price, showtimes.show_date, tickets.seat from showtimes join movies on showtimes.movies_id = movies.id join cinemas on showtimes.cinemas_id = cinemas.id join tickets on showtimes.id = tickets.showtimes_id where showtimes.id = $1";
+    db.query(sqlQuery, [id])
+      .then((result) => {
+        //console.log(result)
+        const response = {
+          total: result.rowCount,
+          data: result.rows,
+        };
+        resolve(response);
+      })
+      .catch((err) => {
+        reject({ status: 500, err });
+      });
+  });
+};
+
+module.exports = { getCinemas, getShowtimes, getShowtimeDetailFilm };

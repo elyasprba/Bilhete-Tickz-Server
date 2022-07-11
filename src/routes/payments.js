@@ -9,5 +9,7 @@ const { checkToken } = require("../middlewares/auth");
 Router.post("/", checkToken, paymentsControllers.postNewTransactions);
 Router.patch("/:id", checkToken, paymentsControllers.paymentConfirm);
 Router.get("/check", checkToken, paymentsControllers.unpaid);
+Router.get("/tickets/:id", checkToken, paymentsControllers.getTransactionTikects);
+Router.get("/history", checkToken, paymentsControllers.getHistoryTransaction);
 
 module.exports = Router;
