@@ -8,6 +8,9 @@ let snap = new midtransClient.Snap({
 
 const createPayment = async (paymentType, transaction) => {
   const parameter = {
+    paymentType: {
+      bank_transfer,
+    },
     transaction_details: {
       order_id: transaction.order_id,
       gross_amount: transaction.gross_amount,
@@ -15,6 +18,7 @@ const createPayment = async (paymentType, transaction) => {
   };
   try {
     const result = await snap.createTransaction(parameter);
+    // snap.transaction()
     return {
       url: result.redirect_url,
     };

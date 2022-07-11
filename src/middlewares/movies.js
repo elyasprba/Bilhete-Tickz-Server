@@ -2,7 +2,7 @@ const { isError } = require("../helper/response");
 
 const moviesInput = (req, res, next) => {
     const { name, category, release_date, duration, cast, synopsis, location, time, price, director, show_date } = req.body;
-    // const { img } = req.file;
+    const { img } = req.file;
     if (!name) {
       return isError(res, 400, { msg: "Undefined name!" });
     }
@@ -21,9 +21,9 @@ const moviesInput = (req, res, next) => {
     if (!synopsis) {
       return isError(res, 400, { msg: "Undefined synopsis!" });
     }
-    // if (!img) {
-    //   return isError(res, 400, { msg: "Undefined image!" });
-    // }
+    if (!img) {
+      return isError(res, 400, { msg: "Undefined image!" });
+    }
     if (!location) {
       return isError(res, 400, { msg: "Undefined location!" });
     }
