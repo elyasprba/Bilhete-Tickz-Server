@@ -1,13 +1,10 @@
 const ClientError = require("../exceptions/ClientError");
 const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
-<<<<<<< HEAD
 const { createPayment } = require("../config/midtrans");
-const { createNewPayments, confirmPayment } = paymentsModel;
-=======
+// const { createNewPayments, confirmPayment } = paymentsModel;
 const { createNewPayments, confirmPayment, unpaidPayment, postTickets } =
   paymentsModel;
->>>>>>> d9e6b3f31ec405fbf92baa6a088511bac0c043e1
 
 const postNewTransactions = async (req, res) => {
   try {
