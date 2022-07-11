@@ -28,12 +28,12 @@ const init = async () => {
       }
       //  body payload
       app.use(express.json());
-      app.use(express.urlencoded({ extended: false }));
+      app.use(express.urlencoded({ extended: true }));
       //cloudinary
       app.use('*', cloudinaryConfig);
       //   cors
       const corsOptions = {
-         origin: ['http://localhost:3000'],
+         origin: ['http://localhost:3000', 'https://bilhete-tickz.vercel.app'],
          methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS', 'PUT'],
          allowedHeaders: ['Content-Type', 'Authorization'],
       };
