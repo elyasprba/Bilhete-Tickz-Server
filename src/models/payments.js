@@ -161,11 +161,12 @@ const postTickets = async (showtimes_id, seat) => {
 
 const getTransactionDetailTickets = (req) => {
   return new Promise((resolve, reject) => {
+    const { id } = req.params;
     const sqlQuery =
-      "select movies.name, showtimes.time, cinemas.name as cinema_name, showtimes.price, showtimes.show_date from showtimes join movies on showtimes.movies_id = movies.id join cinemas on showtimes.cinemas_id = cinemas.id where showtimes.id = '$1'";
+      "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join movies on showtimes.movies_id = movies.id where payments.id = $1 and payments.status = 'paid'";
     db.query(sqlQuery, [id])
       .then((result) => {
-        //console.log(result)
+        // console.log(result)
         const response = {
           total: result.rowCount,
           data: result.rows,
