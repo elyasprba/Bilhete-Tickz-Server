@@ -1,4 +1,5 @@
 const ClientError = require("../exceptions/ClientError");
+const NotfoundError = require("../exceptions/NotfoundError");
 const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
 const {
@@ -40,6 +41,27 @@ const unpaid = async (req, res) => {
       );
     }
     return response.isSuccessHaveData(res, 200, null, "no unpaid transactions");
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return response.isError(res, error.statusCode, error.message);
+    }
+    //   error server
+    console.log(error);
+    return response.isError(
+      res,
+      500,
+      "Sorry, there was a failure on our server"
+    );
+  }
+};
+const cancelPay = async (req, res) => {
+  try {
+    const { id } = req.userPayload;
+    const result = await cancelPayment(id);
+    if (result.id !== undefined) {
+      throw new NotfoundError("transaction not found");
+    }
+    return response.isSuccessNoData(res, 200, "Transaction has been cancel");
   } catch (error) {
     if (error instanceof ClientError) {
       return response.isError(res, error.statusCode, error.message);
@@ -117,6 +139,7 @@ const getHistoryTransaction = (req, res) => {
 };
 
 module.exports = {
+  cancelPay,
   postNewTransactions,
   paymentConfirm,
   unpaid,
