@@ -55,8 +55,8 @@ const createNewPayments = async (body, id) => {
 
 const confirmPayment = async (response) => {
   try {
-    const { body } = response;
-    const statusResponse = await snap.transaction.notification(body);
+    const { url } = response;
+    const statusResponse = await snap.transaction.notification(url);
     let orderId = statusResponse.order_id;
     let transactionStatus = statusResponse.transaction_status;
     let fraudStatus = statusResponse.fraud_status;
