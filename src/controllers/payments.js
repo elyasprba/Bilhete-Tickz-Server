@@ -1,8 +1,14 @@
 const ClientError = require("../exceptions/ClientError");
 const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
-const { createNewPayments, confirmPayment, unpaidPayment, postTickets, getTransactionDetailTickets, getHistoryTransactionUsers } =
-  paymentsModel;
+const {
+  createNewPayments,
+  confirmPayment,
+  unpaidPayment,
+  postTickets,
+  getTransactionDetailTickets,
+  getHistoryTransactionUsers,
+} = paymentsModel;
 
 const postNewTransactions = async (req, res) => {
   try {
@@ -115,5 +121,5 @@ module.exports = {
   paymentConfirm,
   unpaid,
   getTransactionTikects,
-  getHistoryTransaction
+  getHistoryTransaction,
 };

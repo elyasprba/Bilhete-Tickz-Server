@@ -5,7 +5,15 @@ const { v4: uuidV4 } = require("uuid");
 const { snap } = require("../config/midtrans");
 
 const createNewPayments = async (body, id) => {
-  const { seat, price, users_id, quantity, total, showtimes_id } = body;
+  const {
+    seat,
+    price,
+    users_id,
+    quantity,
+    total,
+    showtimes_id,
+    payment_method,
+  } = body;
   try {
     const idTickz = uuidV4();
     let userId = id;
@@ -28,10 +36,11 @@ const createNewPayments = async (body, id) => {
       seat,
       "unpaid",
       showtimes_id,
+      payment_method,
     ];
 
     let queryOrder =
-      "INSERT INTO payments(id, users_id, quantity, total, created_at, updated_at, seat, status, showtimes_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)  RETURNING id";
+      "INSERT INTO payments(id, users_id, quantity, total, created_at, updated_at, seat, status, showtimes_id,payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)  RETURNING id";
 
     // if (promo_id) {
     //   queryOrder = "with t as (INSERT INTO transactions(users_id, sub_total, shipping, total_price, created_at,promo_id) VALUES($1,$2,$3,$4,$5,$6) returning id),pr as (UPDATE promos set on_delete=true where id = $6) select t.id from t";
@@ -152,7 +161,7 @@ const postTickets = async (showtimes_id, seat) => {
 
 const getTransactionDetailTickets = (req) => {
   return new Promise((resolve, reject) => {
-    const { id } = req.params
+    const { id } = req.params;
     const sqlQuery =
       "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join movies on showtimes.movies_id = movies.id where payments.id = $1 and payments.status = 'paid'";
     db.query(sqlQuery, [id])
@@ -162,7 +171,19 @@ const getTransactionDetailTickets = (req) => {
           total: result.rowCount,
           data: result.rows,
         };
-        // console.log(response)
+        const sqlQuerySeat =
+          "select tickets.seat from showtimes join movies on showtimes.movies_id = movies.id join cinemas on showtimes.cinemas_id = cinemas.id join tickets on showtimes.id = tickets.showtimes_id where showtimes.id = $1";
+        db.query(sqlQuerySeat, [id])
+          .then((result) => {
+            const response = {
+              total: result.rowCount,
+              seat: result.rows,
+            };
+            resolve(response);
+          })
+          .catch((err) => {
+            reject({ status: 500, err });
+          });
         resolve(response);
       })
       .catch((err) => {

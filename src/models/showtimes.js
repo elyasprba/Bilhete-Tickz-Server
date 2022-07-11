@@ -111,24 +111,25 @@ const getShowtimes = async (cinemas_id, movies_id) => {
   }
 };
 
-const getShowtimeDetailFilm = (req) => {
-  return new Promise((resolve, reject) => {
-    const { id } = req.params
+const getShowtimeDetailFilm = async (id) => {
+  try {
     const sqlQuery =
-      "select movies.name, showtimes.time, cinemas.name as cinema_name, showtimes.price, showtimes.show_date, tickets.seat from showtimes join movies on showtimes.movies_id = movies.id join cinemas on showtimes.cinemas_id = cinemas.id join tickets on showtimes.id = tickets.showtimes_id where showtimes.id = $1";
-    db.query(sqlQuery, [id])
-      .then((result) => {
-        //console.log(result)
-        const response = {
-          total: result.rowCount,
-          data: result.rows,
-        };
-        resolve(response);
-      })
-      .catch((err) => {
-        reject({ status: 500, err });
-      });
-  });
+      "select s.id,c.pictures as cinemas_logo,c.name as cinemas_name,m.name as movies_name,s.show_date ,s.time ,s.price  from showtimes s inner join movies m  on s.movies_id = m.id inner join cinemas c on c.id = s.cinemas_id where s.id = $1 ";
+    const result = await db.query(sqlQuery, [id]);
+    const seat = await db.query(
+      "select tickets.seat from showtimes join movies on showtimes.movies_id = movies.id join cinemas on showtimes.cinemas_id = cinemas.id join tickets on showtimes.id = tickets.showtimes_id where showtimes.id = $1",
+      [id]
+    );
+
+    const data = {
+      ...result.rows[0],
+      list_seat: seat.rows,
+    };
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 };
 
 module.exports = { getCinemas, getShowtimes, getShowtimeDetailFilm };

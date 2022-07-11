@@ -1,5 +1,9 @@
 const InvariantError = require("../exceptions/InvariantError");
-const { getCinemas, getShowtimes, getShowtimeDetailFilm } = require("../models/showtimes");
+const {
+  getCinemas,
+  getShowtimes,
+  getShowtimeDetailFilm,
+} = require("../models/showtimes");
 const response = require("../helper/response");
 const ClientError = require("../exceptions/ClientError");
 const NotfoundError = require("../exceptions/NotfoundError");
@@ -85,16 +89,23 @@ const readShowtimes = async (req, res) => {
 };
 
 const getShowtimesDetail = (req, res) => {
-  getShowtimeDetailFilm(req)
+  getShowtimeDetailFilm(req.params.id)
     .then((data) => {
       res.status(200).json({
         data,
       });
     })
-    .catch(({ status, err }) => {
-      res.status(status).json({
-        err,
-      });
+    .catch((error) => {
+      if (error instanceof ClientError) {
+        return response.isError(res, error.statusCode, error.message);
+      }
+      //   error server
+      console.log(error);
+      return response.isError(
+        res,
+        500,
+        "Sorry, there was a failure on our server"
+      );
     });
 };
 
