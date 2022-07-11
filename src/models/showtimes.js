@@ -123,9 +123,8 @@ const getShowtimeDetailFilm = async (id) => {
 
     const data = {
       ...result.rows[0],
-      seat: seat.rows,
+      list_seat: seat.rows,
     };
-    console.log(data);
     return data;
   } catch (error) {
     console.log(error);
