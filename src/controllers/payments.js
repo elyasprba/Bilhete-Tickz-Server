@@ -1,8 +1,6 @@
 const ClientError = require("../exceptions/ClientError");
 const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
-const { createPayment } = require("../config/midtrans");
-// const { createNewPayments, confirmPayment } = paymentsModel;
 const { createNewPayments, confirmPayment, unpaidPayment, postTickets } =
   paymentsModel;
 
@@ -10,12 +8,9 @@ const postNewTransactions = async (req, res) => {
   try {
     const { id } = req.userPayload;
     const { data, message } = await createNewPayments(req.body, id);
-    const { url } = await createPayment(data.orderId, data.total_payment);
 
     res.status(201).json({
       data,
-      id: data.orderId,
-      url,
       message,
     });
   } catch (err) {

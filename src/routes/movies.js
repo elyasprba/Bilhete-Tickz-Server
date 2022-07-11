@@ -19,7 +19,7 @@ const { moviesInput } = require("../middlewares/movies");
 Router.post(
   "/",
   checkToken,
-  moviesInput,
+  // moviesInput,
   imageUpload.single("img"),
   createMovies
 );
