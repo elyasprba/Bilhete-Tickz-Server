@@ -1,7 +1,7 @@
 const { isError } = require("../helper/response");
 
 const moviesInput = (req, res, next) => {
-    const { name, category, release_date, duration, cast, synopsis, location, time, price, director, show_date, cinemas_id} = req.body;
+    const { name, category, release_date, duration, cast, synopsis, time, price, director, show_date, cinemas_id} = req.body;
     const img = req.file;
     if (!category) {
       return isError(res, 400, { msg: "Input category!" });
@@ -24,9 +24,9 @@ const moviesInput = (req, res, next) => {
     if (!img) {
       return isError(res, 400, { msg: "Input image!" });
     }
-    if (!location) {
-      return isError(res, 400, { msg: "Input location!" });
-    }
+    // if (!location) {
+    //   return isError(res, 400, { msg: "Input location!" });
+    // }
     if (!time) {
       return isError(res, 400, { msg: "Input time!" });
     }
