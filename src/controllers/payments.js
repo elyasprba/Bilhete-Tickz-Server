@@ -1,8 +1,17 @@
 const ClientError = require("../exceptions/ClientError");
+const NotfoundError = require("../exceptions/NotfoundError");
 const response = require("../helper/response");
 const paymentsModel = require("../models/payments");
-const { createNewPayments, confirmPayment, unpaidPayment, postTickets, getTransactionDetailTickets, getHistoryTransactionUsers } =
-  paymentsModel;
+const {
+  createNewPayments,
+  cancelPayment,
+  confirmPayment,
+  unpaidPayment,
+  postTickets,
+  getTransactionDetailTickets,
+  getHistoryTransactionUsers,
+  getDashboard
+} = paymentsModel;
 
 const postNewTransactions = async (req, res) => {
   try {
@@ -34,6 +43,27 @@ const unpaid = async (req, res) => {
       );
     }
     return response.isSuccessHaveData(res, 200, null, "no unpaid transactions");
+  } catch (error) {
+    if (error instanceof ClientError) {
+      return response.isError(res, error.statusCode, error.message);
+    }
+    //   error server
+    console.log(error);
+    return response.isError(
+      res,
+      500,
+      "Sorry, there was a failure on our server"
+    );
+  }
+};
+const cancelPay = async (req, res) => {
+  try {
+    const { id } = req.userPayload;
+    const result = await cancelPayment(id);
+    if (result === undefined) {
+      throw new NotfoundError("transaction not found");
+    }
+    return response.isSuccessNoData(res, 200, "Transaction has been cancel");
   } catch (error) {
     if (error instanceof ClientError) {
       return response.isError(res, error.statusCode, error.message);
@@ -110,10 +140,26 @@ const getHistoryTransaction = (req, res) => {
     });
 };
 
+const getDashboardOrder = (req, res) => {
+  getDashboard(req.query)
+    .then((data) => {
+      res.status(200).json({
+        data,
+      });
+    })
+    .catch(({ status, err }) => {
+      res.status(status).json({
+        err,
+      });
+    });
+};
+
 module.exports = {
+  cancelPay,
   postNewTransactions,
   paymentConfirm,
   unpaid,
   getTransactionTikects,
-  getHistoryTransaction
+  getHistoryTransaction,
+  getDashboardOrder
 };

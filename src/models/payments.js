@@ -5,7 +5,15 @@ const { v4: uuidV4 } = require("uuid");
 const { snap } = require("../config/midtrans");
 
 const createNewPayments = async (body, id) => {
-  const { seat, price, users_id, quantity, total, showtimes_id } = body;
+  const {
+    seat,
+    price,
+    users_id,
+    quantity,
+    total,
+    showtimes_id,
+    payment_method,
+  } = body;
   try {
     const idTickz = uuidV4();
     let userId = id;
@@ -28,10 +36,11 @@ const createNewPayments = async (body, id) => {
       seat,
       "unpaid",
       showtimes_id,
+      payment_method,
     ];
 
     let queryOrder =
-      "INSERT INTO payments(id, users_id, quantity, total, created_at, updated_at, seat, status, showtimes_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)  RETURNING id";
+      "INSERT INTO payments(id, users_id, quantity, total, created_at, updated_at, seat, status, showtimes_id,payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)  RETURNING id";
 
     // if (promo_id) {
     //   queryOrder = "with t as (INSERT INTO transactions(users_id, sub_total, shipping, total_price, created_at,promo_id) VALUES($1,$2,$3,$4,$5,$6) returning id),pr as (UPDATE promos set on_delete=true where id = $6) select t.id from t";
@@ -76,6 +85,16 @@ const unpaidPayment = async (id) => {
   try {
     const sqlQuery =
       "select * from payments where users_id = $1 and status = 'unpaid' ";
+    const result = await db.query(sqlQuery, [id]);
+    return result.rows[0];
+  } catch (error) {
+    throw error;
+  }
+};
+const cancelPayment = async (id) => {
+  try {
+    const sqlQuery =
+      "delete from payments where users_id = $1 and status = 'unpaid' returning id";
     const result = await db.query(sqlQuery, [id]);
     return result.rows[0];
   } catch (error) {
@@ -157,11 +176,12 @@ const getTransactionDetailTickets = (req) => {
       "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join movies on showtimes.movies_id = movies.id where payments.id = $1 and payments.status = 'paid'";
     db.query(sqlQuery, [id])
       .then((result) => {
-        //console.log(result)
+        // console.log(result)
         const response = {
           total: result.rowCount,
           data: result.rows,
         };
+        // console.log(response)
         resolve(response);
       })
       .catch((err) => {
@@ -173,7 +193,7 @@ const getTransactionDetailTickets = (req) => {
 const getHistoryTransactionUsers = (id) => {
   return new Promise((resolve, reject) => {
     const sqlQuery =
-      "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category, cinemas.name as name_cinemas from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join cinemas on showtimes.cinemas_id = cinemas.id join movies on showtimes.movies_id = movies.id where users.id = $1";
+      "select payments.id, payments.status, payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category, cinemas.name as name_cinemas from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join cinemas on showtimes.cinemas_id = cinemas.id join movies on showtimes.movies_id = movies.id where users.id = $1";
     db.query(sqlQuery, [id])
       .then((result) => {
         //console.log(result)
@@ -189,6 +209,26 @@ const getHistoryTransactionUsers = (id) => {
   });
 };
 
+const getDashboard = (query) => {
+  return new Promise((resolve, reject) => {
+    const { created_at } = query
+    const sqlQuery =
+      "select payments.created_at, sum(payments.total) as revenue, movies.name from payments join showtimes on payments.showtimes_id = showtimes.id join movies on showtimes.movies_id = movies.id where payments.created_at > now() - interval '1 $1' group by movies.name, payments.id order by movies.name asc";
+    db.query(sqlQuery, [created_at])
+      .then((result) => {
+        const response = {
+          total: result.rowCount,
+          data: result.rows,
+        };
+        // console.log(response)
+        resolve(response);
+      })
+      .catch((err) => {
+        reject({ status: 500, err });
+      });
+  });
+};
+
 module.exports = {
   createNewPayments,
   confirmPayment,
@@ -196,4 +236,6 @@ module.exports = {
   postTickets,
   getTransactionDetailTickets,
   getHistoryTransactionUsers,
+  cancelPayment,
+  getDashboard
 };
