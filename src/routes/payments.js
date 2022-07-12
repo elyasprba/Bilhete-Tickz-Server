@@ -10,11 +10,8 @@ Router.post("/", checkToken, paymentsControllers.postNewTransactions);
 Router.patch("/:id", checkToken, paymentsControllers.paymentConfirm);
 Router.get("/check", checkToken, paymentsControllers.unpaid);
 Router.get("/cancel", checkToken, paymentsControllers.cancelPay);
-Router.get(
-  "/tickets/:id",
-  checkToken,
-  paymentsControllers.getTransactionTikects
-);
+Router.get("/tickets/:id", checkToken, paymentsControllers.getTransactionTikects);
 Router.get("/history", checkToken, paymentsControllers.getHistoryTransaction);
+Router.get("/dashboard", checkToken, paymentsControllers.getDashboardOrder);
 
 module.exports = Router;

@@ -171,7 +171,7 @@ const postTickets = async (showtimes_id, seat) => {
 
 const getTransactionDetailTickets = (req) => {
   return new Promise((resolve, reject) => {
-    const { id } = req.params;
+    const { id } = req.params
     const sqlQuery =
       "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join movies on showtimes.movies_id = movies.id where payments.id = $1 and payments.status = 'paid'";
     db.query(sqlQuery, [id])
@@ -181,19 +181,7 @@ const getTransactionDetailTickets = (req) => {
           total: result.rowCount,
           data: result.rows,
         };
-        const sqlQuerySeat =
-          "select tickets.seat from showtimes join movies on showtimes.movies_id = movies.id join cinemas on showtimes.cinemas_id = cinemas.id join tickets on showtimes.id = tickets.showtimes_id where showtimes.id = $1";
-        db.query(sqlQuerySeat, [id])
-          .then((result) => {
-            const response = {
-              total: result.rowCount,
-              seat: result.rows,
-            };
-            resolve(response);
-          })
-          .catch((err) => {
-            reject({ status: 500, err });
-          });
+        // console.log(response)
         resolve(response);
       })
       .catch((err) => {
@@ -205,7 +193,7 @@ const getTransactionDetailTickets = (req) => {
 const getHistoryTransactionUsers = (id) => {
   return new Promise((resolve, reject) => {
     const sqlQuery =
-      "select payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category, cinemas.name as name_cinemas from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join cinemas on showtimes.cinemas_id = cinemas.id join movies on showtimes.movies_id = movies.id where users.id = $1";
+      "select payments.id, payments.status, payments.total, payments.seat, payments.quantity, movies.name, showtimes.show_date, showtimes.time, movies.category, cinemas.name as name_cinemas from payments join users on payments.users_id = users.id join showtimes on payments.showtimes_id = showtimes.id join cinemas on showtimes.cinemas_id = cinemas.id join movies on showtimes.movies_id = movies.id where users.id = $1";
     db.query(sqlQuery, [id])
       .then((result) => {
         //console.log(result)
@@ -213,6 +201,26 @@ const getHistoryTransactionUsers = (id) => {
           total: result.rowCount,
           data: result.rows,
         };
+        resolve(response);
+      })
+      .catch((err) => {
+        reject({ status: 500, err });
+      });
+  });
+};
+
+const getDashboard = (query) => {
+  return new Promise((resolve, reject) => {
+    const { created_at } = query
+    const sqlQuery =
+      "select payments.created_at, sum(payments.total) as revenue, movies.name from payments join showtimes on payments.showtimes_id = showtimes.id join movies on showtimes.movies_id = movies.id where payments.created_at > now() - interval '1 $1' group by movies.name, payments.id order by movies.name asc";
+    db.query(sqlQuery, [created_at])
+      .then((result) => {
+        const response = {
+          total: result.rowCount,
+          data: result.rows,
+        };
+        // console.log(response)
         resolve(response);
       })
       .catch((err) => {
@@ -229,4 +237,5 @@ module.exports = {
   getTransactionDetailTickets,
   getHistoryTransactionUsers,
   cancelPayment,
+  getDashboard
 };

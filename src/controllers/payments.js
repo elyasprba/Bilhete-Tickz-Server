@@ -10,6 +10,7 @@ const {
   postTickets,
   getTransactionDetailTickets,
   getHistoryTransactionUsers,
+  getDashboard
 } = paymentsModel;
 
 const postNewTransactions = async (req, res) => {
@@ -139,6 +140,20 @@ const getHistoryTransaction = (req, res) => {
     });
 };
 
+const getDashboardOrder = (req, res) => {
+  getDashboard(req.query)
+    .then((data) => {
+      res.status(200).json({
+        data,
+      });
+    })
+    .catch(({ status, err }) => {
+      res.status(status).json({
+        err,
+      });
+    });
+};
+
 module.exports = {
   cancelPay,
   postNewTransactions,
@@ -146,4 +161,5 @@ module.exports = {
   unpaid,
   getTransactionTikects,
   getHistoryTransaction,
+  getDashboardOrder
 };
